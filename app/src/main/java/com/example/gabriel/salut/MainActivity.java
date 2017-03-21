@@ -1,5 +1,10 @@
 package com.example.gabriel.salut;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.util.ArrayList;
 import java.util.List;
 
 import android.app.ProgressDialog;
@@ -13,8 +18,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 
+import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -29,6 +36,36 @@ public class MainActivity extends AppCompatActivity {
     Button buttonOne;
     Toolbar myToolbar;
     ProgressBar pbar;
+
+
+
+    public void writeToFile(String data)
+    {
+        final File path =
+                Environment.getExternalStoragePublicDirectory
+                        (
+                                Environment.DIRECTORY_DOCUMENTS
+                        );
+
+        final File file = new File(path, "wifi.txt");
+
+        try
+        {
+            file.createNewFile();
+            FileOutputStream fOut = new FileOutputStream(file);
+            OutputStreamWriter myOutWriter = new OutputStreamWriter(fOut);
+            myOutWriter.append(data);
+
+            myOutWriter.close();
+
+            fOut.flush();
+            fOut.close();
+        }
+        catch (IOException e)
+        {
+            Log.e("Exception", "File write failed: " + e.toString());
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,7 +94,6 @@ public class MainActivity extends AppCompatActivity {
         super.onPause();
     }
 
-
     protected void onResume() {
         registerReceiver(wifiReciever, new IntentFilter(
                 WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
@@ -66,6 +102,7 @@ public class MainActivity extends AppCompatActivity {
     class WifiScanReceiver extends BroadcastReceiver {
         @SuppressLint("UseValueOf")
         public void onReceive(Context c, Intent intent) {
+            String windstorm = "";
             List<ScanResult> wifiScanList = mainWifiObj.getScanResults();
             wifis = new String[wifiScanList.size()];
             for(int i = 0; i < wifiScanList.size(); i++){
@@ -73,7 +110,11 @@ public class MainActivity extends AppCompatActivity {
                         "BSSID: " + (wifiScanList.get(i)).BSSID + "\n" +
                         "Capabilities: " + (wifiScanList.get(i)).capabilities + "\n" +
                         "Frequency:" + (wifiScanList.get(i)).frequency) );
+
+                windstorm+=wifis[i] +"\n\n";
             }
+
+            writeToFile(windstorm);
 
             list.setAdapter(new ArrayAdapter<String>(
                     getApplicationContext(), R.layout.elemlist, R.id.list_content, wifis));
