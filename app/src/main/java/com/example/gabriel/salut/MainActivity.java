@@ -38,7 +38,8 @@ public class MainActivity extends AppCompatActivity {
     ProgressBar pbar;
 
 
-
+    /* functia scrie rezultatele in fisierul "wifi.txt" din folder-ul
+     "Documente". In caz ca acest fisiser nu exista, va fi creat */
     public void writeToFile(String data)
     {
         final File path =
@@ -67,15 +68,25 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /*
+    Este instantiat Wifi Manager.
+    Se verfica daca este pronit wifi-ul, iar in caz ca nu, va fi deschis.
+    Este instantiat un buton care va porni scanarea, un List View si un Toolbar.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
         setSupportActionBar(myToolbar);
-       // list = (ListView)findViewById(R.id.listView1);
+
         mainWifiObj = (WifiManager) getApplicationContext().getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+
+        if (mainWifiObj.isWifiEnabled() == false)
+            mainWifiObj.setWifiEnabled(true);
+
         wifiReciever = new WifiScanReceiver();
+
         pbar = (ProgressBar) findViewById(R.id.ctrlActivityIndicator);
 
         buttonOne = (Button) findViewById(R.id.button5);
@@ -99,10 +110,15 @@ public class MainActivity extends AppCompatActivity {
                 WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
         super.onResume();
     }
+
+    /*
+    Sunt extrase in urma scanarii doar anumite caracteristici.
+    Toate acestea vor fi afisate in List View, dar si concatenante pentru a fi scrise in fisier.
+     */
     class WifiScanReceiver extends BroadcastReceiver {
         @SuppressLint("UseValueOf")
         public void onReceive(Context c, Intent intent) {
-            String windstorm = "";
+            String strtofile = "";
             List<ScanResult> wifiScanList = mainWifiObj.getScanResults();
             wifis = new String[wifiScanList.size()];
             for(int i = 0; i < wifiScanList.size(); i++){
@@ -111,10 +127,10 @@ public class MainActivity extends AppCompatActivity {
                         "Capabilities: " + (wifiScanList.get(i)).capabilities + "\n" +
                         "Frequency:" + (wifiScanList.get(i)).frequency) );
 
-                windstorm+=wifis[i] +"\n\n";
+                strtofile+=wifis[i] +"\n\n";
             }
 
-            writeToFile(windstorm);
+            writeToFile(strtofile);
 
             list.setAdapter(new ArrayAdapter<String>(
                     getApplicationContext(), R.layout.elemlist, R.id.list_content, wifis));
